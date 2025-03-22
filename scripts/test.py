@@ -8,7 +8,7 @@ ser = serial.Serial(port='COM13', baudrate=9600, timeout=1)
 time.sleep(1)
 
 # Bytes to send
-data = bytes([0x01, 0xAA, 0x55])
+data = bytes([i for i in range(1,130)])
 
 # Send the data
 ser.write(data)

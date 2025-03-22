@@ -15,7 +15,8 @@ blockword:
     mvi c,3         ; set function 3 (serial in)
     call 5          ; call BDOS, result stored in A
     call printhex
-    jmp exit
+ 
+ 
 
 ;
 ; print accumulator to the screen
