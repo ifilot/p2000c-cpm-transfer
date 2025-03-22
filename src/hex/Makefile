@@ -1,11 +1,16 @@
 SHELL := /bin/bash
+EMUPATH := ../../vendor/z80pack
+PROG := hex
 
-all: hex.com
+all: $(PROG).com
 
-hex.com: hex.asm
-	asm80 hex.asm -o hex.com
+$(PROG).com: $(PROG).asm
+	asm80 $(PROG).asm -o $(PROG).com
 
-run: hex.com
-	pushd  ../../../z80pack/cpmsim/disks && rm -vf drivec.dsk && ../srctools/mkdskimg c && popd
-	cpmcp ../../../z80pack/cpmsim/disks/drivec.dsk hex.com 0:
-	pushd  ../../../z80pack/cpmsim && ./cpm22 && popd
+$(EMUPATH)/cpmsim/cpm22 $(EMUPATH)/cpmsim/srctools/mkdskimg:
+	make -j -C ../../vendor/z80pack
+
+run: $(PROG).com $(EMUPATH)/cpmsim/cpm22 $(EMUPATH)/cpmsim/srctools/mkdskimg
+	pushd  $(EMUPATH)/cpmsim/disks && rm -vf drivec.dsk && ../srctools/mkdskimg c && popd
+	cpmcp $(EMUPATH)/cpmsim/disks/drivec.dsk $(PROG).com 0:
+	pushd  $(EMUPATH)/cpmsim && ./cpm22 && popd
