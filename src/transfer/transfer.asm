@@ -15,7 +15,7 @@ blockword:
     mvi c,3         ; set function 3 (serial in)
     call 5          ; call BDOS, result stored in A
     call printhex
-    rst 7           ; return
+    jmp exit
 
 ;
 ; print accumulator to the screen
@@ -37,7 +37,7 @@ printhex:
 printnibble:
     cpi 0Ah             ; is smaller than A?
     jc isdigit          ; if so, print digit
-    adi 55h             ; else add 55h
+    adi 37h             ; else add 37h to get 'A' and higher
     jmp printchar       ; then print digit
 
 isdigit:
@@ -50,4 +50,4 @@ printchar:
     ret
 
 exit:
-    rst 7
+    ret
