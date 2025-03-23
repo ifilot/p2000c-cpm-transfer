@@ -1,52 +1,67 @@
-org 0100h
+ORG 100H
 
-; check for a start of block
-startblock:
-    mvi c,3         ; set function 3 (serial in)
-    call 5          ; call BDOS, result stored in A
-    cpi 01h         ; check if one
-    jnz exit
+START:
+        MVI C,3
+        CALL 5
+        CPI 01H
+        JNZ EXIT
 
-    mvi b,128       ; set number of bytes
-    lxi h,200h      ; set storage pointer
-nextbyte:
-    push bc         ; push counter onto stack
-    push hl         ; push address onto stack
-    mvi c,3         ; set function 3 (serial in)
-    call 5          ; call BDOS, result stored in A
-    pop hl          ; retrieve storage address
-    mov m,a         ; store in memory
-    inx hl          ; increment storage pointer
-    pop bc          ; retrieve counter from stack
-    dcr b           ; decrement counter
-    jnz nextbyte    ; next byte
+; READ FILENAME OVER SERIAL
+        MVI B,11
+        LXI H,FILENAME
+        CALL READSERIAL
 
-    lxi d,fcb
-    mvi c,13h       ; delete file if it exists
-    call 5
+; READ BLOCK OVER SERIAL
+        MVI B,128
+        LXI H,200H
+        CALL READSERIAL
 
-    lxi d,fcb
-    mvi c,16h       ; create file
-    call 5
+; STORE FILE ON DISK
+        CALL STOREBLOCK
+        JMP EXIT
 
-    lxi d,200h
-    mvi c,1ah
-    call 5
+READSERIAL:
+        PUSH B
+        PUSH H
+        MVI C,3
+        CALL 5
+        POP H
+        MOV M,A
+        INX H
+        POP B
+        DCR B
+        JNZ READSERIAL
+        RET
 
-    lxi d,fcb
-    mvi c,22h       ; write sequential
-    call 5
+; STORE BLOCK ON DISK
+STOREBLOCK:
+        LXI D,FCB
+        MVI C,13H
+        CALL 5
 
-    lxi d,fcb
-    mvi c,10h       ; close file
-    call 5
+        LXI D,FCB
+        MVI C,16H
+        CALL 5
 
-    jmp exit
+        LXI D,200H
+        MVI C,1AH
+        CALL 5
 
-exit:
-    rst 7
+        LXI D,FCB
+        MVI C,22H
+        CALL 5
 
-fcb:
-    db 0
-    db 'MYFILE  BIN'
-    ds 20
+        LXI D,FCB
+        MVI C,10H
+        CALL 5
+
+        RET
+
+EXIT:
+        RET
+
+FCB:
+        DB 0
+FILENAME:
+        DB 'MYFILE  BIN'
+        DS 20
