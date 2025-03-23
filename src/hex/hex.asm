@@ -37,3 +37,5 @@ printchar:
     mvi c,2             ; set function 2
     call 5              ; call BDOS
     ret
+
+    ds 256

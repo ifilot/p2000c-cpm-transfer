@@ -5,16 +5,21 @@ import struct
 
 def main():    
     # read filename
-    p = os.path.join('..', 'src', 'hex', 'hex.com')
+    p = os.path.join('..', 'programs', 'games', 'zork', 'ZORK2.COM')
+    
+    send_file_to_p2000c(p)
+
+def send_file_to_p2000c(p):
     with open(p, 'rb') as f:
         filedata = bytes(f.read())
+
     nrblocks = len(filedata) // 128 + (1 if len(filedata) % 128 != 0 else 0)
     filedata += bytes([0x00] * ((nrblocks * 128) - len(filedata)))
     print(nrblocks)
     
     # set header
     data = bytes([1])                                   # start byte
-    data += bytes(to_8_3_filename(p).encode('ascii'))   # filename
+    data += bytes(convert_to_8_3_filename(p).encode('ascii'))   # filename
     data += bytes(struct.pack('<H', nrblocks))          # number of blocks
     
     # check that header is 14 bytes
@@ -34,16 +39,24 @@ def main():
     time.sleep(1) # small delay
     
     # Write blocks
-    for i in range(0, len(filedata), 128):
+    for ctr,i in enumerate(range(0, len(filedata), 128)):
         chunk = filedata[i:i+128]
         ser.write(chunk)
         res = ser.read(2)   # read acknowledge byte
-        print('%02X / %02X / %s' % (sum(chunk)%256, res[0], 'ACK' if res[1] == 0x06 else 'NAC'))
+        checksum = sum(chunk)%256
+    
+        print('%03i / %03i: %02X / %02X / %s' % (
+            ctr,
+            nrblocks,
+            checksum,
+            res[0],
+            'ACK' if res[1] == 0x06 else 'NAC',
+        ))
     
     # Close the port
     ser.close()
 
-def to_8_3_filename(path):
+def convert_to_8_3_filename(path):
     """
     Given a path, extract the filename and convert that to CP/M 8+3
     format
