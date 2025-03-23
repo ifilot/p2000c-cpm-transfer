@@ -40,4 +40,40 @@ transfer program. To do so, run the following on your P2000C
 PIP TRANSFER.COM=RDR:
 ```
 
-and run on your modern computer the script `sendasm.py`.
+and run on your modern computer the script `sendasm.py`. Next, on your
+P2000C, run the assembler to assemble the program
+
+```
+ASM TRANSFER
+```
+
+which should give an output similar to the following
+
+```text
+CP/M ASSEMBLER - VER 2.0
+0498
+003H USE FACTOR
+END OF ASSEMBLY
+```
+
+After assembling, we need to create the `.COM` file using
+
+```
+LOAD TRANSFER
+```
+
+which should give an output akin to
+
+```text
+FIRST ADDRESS 0100
+LAST  ADDRESS 0417
+BYTES READ    0318
+RECORDS WRITTEN 07
+```
+
+This should create the file `TRANSFER.COM`, which you can now execute by
+typing
+
+```
+TRANSFER
+```

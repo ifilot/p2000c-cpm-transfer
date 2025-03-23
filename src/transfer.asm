@@ -2,7 +2,7 @@
 ;  CP/M Serial File Transfer Utility for Philips P2000C
 ; ------------------------------------------------------------------------------
 ;  Author      : Ivo Filot <ivo@ivofilot.nl>
-;  Version     : 0.1.0
+;  Version     : 1.0.0
 ;  Target      : CP/M 2.2 (Philips P2000C)
 ;  Assembler   : ASM.COM
 ;  Origin      : 0100H (CP/M standard)
@@ -41,7 +41,6 @@
 ;
 ;  Exit Code :
 ;    - Program returns to CP/M with RET instruction
-;
 ; ==============================================================================
 
 ORG 100H
@@ -62,13 +61,13 @@ WAIT:
     LXI H,FILENAME
     CALL READSERIAL
     CALL PRINTFILENAME
-    CALL NEWLINE
 
 ; READ NUMBER OF BLOCKS OVER SERIAL
     MVI B,2
     LXI H,NRBLOCKS
     CALL READSERIAL
     CALL PRINTBLOCKS
+    CALL DASHEDLINE
 
 ; OPEN FILE ON DISK
     CALL OPENFILE
@@ -244,15 +243,20 @@ PRINTCOUNTER:
     CALL 5
     POP D               ; RETRIEVE BLOCK COUNTER IN DE
     CALL PRINTHEX16
-    MVI E,2FH
-    MVI C,2
+    LXI D,MSGC2         ; WRITE SEPARATOR
+    MVI C,9
     CALL 5
     CALL LOADNRBLOCKS
-    CALL PRINTHEX16
+    CALL PRINTHEX16     ; WRITE TOTAL NUMBER OF BLOCKS
+    MVI E,48H           ; WRITE 'H'
+    MVI C,2
+    CALL 5
     RET
 
 MSGC:
     DB 'Block: $'
+MSGC2:
+    DB 'H / $'
 
 ;-------------------------------------------------------------------------------
 ; PRINT CHECKSUM ON SCREEN AND SEND IT OVER SERIAL
@@ -341,7 +345,9 @@ PRINTCHAR:
     CALL 5              ; CALL BDOS
     RET
 
+;-------------------------------------------------------------------------------
 ; PRINT NEWLINE
+;-------------------------------------------------------------------------------
 NEWLINE:
     MVI E, 0DH
     MVI C, 2
@@ -367,31 +373,58 @@ CHKNEXTBYTE:
     RET
 
 ;-------------------------------------------------------------------------------
-; PRINT START MESSAGE
+; PRINT DASHED LINE
 ;-------------------------------------------------------------------------------
-PRINTSTARTMSG:
-    LXI D, SMSG1
-    MVI C,9
-    CALL 5
-    CALL NEWLINE
-    LXI D, SMSG2
-    MVI C,9
-    CALL 5
-    CALL NEWLINE
-    LXI D, SMSG3
-    MVI C,9
-    CALL 5
-    CALL NEWLINE
-    LXI D, SMSG4
+DASHEDLINE:
+    LXI D, SMSG2            ; PRINT DASHED LINE
     MVI C,9
     CALL 5
     CALL NEWLINE
     RET
 
+;-------------------------------------------------------------------------------
+; PRINT START MESSAGE
+;-------------------------------------------------------------------------------
+PRINTSTARTMSG:
+    LXI H, MSGTABLE         ; POINT MESSAGE TO TABLE
+
+PRINTMSGLOOP:
+    MOV E, M                ; GET LOW BYTE
+    INX H
+    MOV D, M                ; GET HIGH BYTE
+    INX H
+
+    MOV A, D
+    ORA E
+    JZ EXITPRINT
+
+    PUSH H
+    MVI C, 9
+    CALL 5
+    CALL NEWLINE
+    POP H
+    JMP PRINTMSGLOOP
+EXITPRINT:
+    RET
+
+;-------------------------------------------------------------------------------
+; TABLE OF MESSAGES TO PRINT (null-terminated)
+;-------------------------------------------------------------------------------
+MSGTABLE:
+    DW SMSG2
+    DW SMSG1
+    DW SMSGAUTH
+    DW SMSG2
+    DW SMSG3
+    DW SMSG4
+    DW 0
+
 SMSG1:
-    DB 'Philips P2000C File Transfer program - Version 0.1.0$'
+    DB '   Philips P2000C File Transfer program - Version 1.0.0$'
+SMSGAUTH:
+    DB '   Copyright (C) 2025 - Ivo Filot / ivo@ivofilot.nl$'
 SMSG2:
-    DB '----------------------------------------------------$'
+    DB '----------------------------------------------------------$'
 SMSG3:
     DB 'Settings: 9600 BAUD / 1 START bit / 1 STOP bit / NO parity.$'
 SMSG4:
@@ -401,7 +434,14 @@ SMSG4:
 ; EXIT THE PROGRAM
 ;-------------------------------------------------------------------------------
 EXIT:
+    CALL DASHEDLINE
+    LXI D,MSGEXIT
+    MVI C,9
+    CALL 5
     RET
+
+MSGEXIT:
+    DB 'End of program$'
 
 ;-------------------------------------------------------------------------------
 ; VARIABLES AND STORAGE

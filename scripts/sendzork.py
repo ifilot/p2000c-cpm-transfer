@@ -4,23 +4,42 @@ import os
 import struct
 
 def main():    
-    # read filename
-    p = os.path.join('..', 'programs', 'games', 'zork', 'ZORK2.COM')
+    p = os.path.join('..', 'programs', 'games', 'zork', 'ZORK3.COM')
     
     send_file_to_p2000c(p)
 
 def send_file_to_p2000c(p):
+    """
+    Transfers a binary file over serial using a custom protocol.
+    
+    Steps:
+    1. Opens the specified file in binary mode and reads its contents.
+    2. Pads the file to a multiple of 128 bytes.
+    3. Calculates the number of 128-byte blocks.
+    4. Constructs a 14-byte header:
+       - Start byte (0x01)
+       - 8.3 UPPERCASE filename (11 bytes, space-padded)
+       - 2-byte little-endian block count
+    5. Opens a serial port (COM13 @ 9600 baud) for transmission.
+    6. Sends the header and then the file in 128-byte chunks.
+    7. After each chunk, waits for a 2-byte response:
+       - First byte: checksum (should match calculated checksum)
+       - Second byte: 0x06 (ACK) or other (NAC)
+    8. Prints transfer progress with block index, checksum, response, and status.
+    
+    Raises:
+    - AssertionError if header size is not 14 bytes or file size mismatch occurs.
+    """
     with open(p, 'rb') as f:
         filedata = bytes(f.read())
 
     nrblocks = len(filedata) // 128 + (1 if len(filedata) % 128 != 0 else 0)
     filedata += bytes([0x00] * ((nrblocks * 128) - len(filedata)))
-    print(nrblocks)
     
     # set header
-    data = bytes([1])                                   # start byte
+    data = bytes([1])                                           # start byte
     data += bytes(convert_to_8_3_filename(p).encode('ascii'))   # filename
-    data += bytes(struct.pack('<H', nrblocks))          # number of blocks
+    data += bytes(struct.pack('<H', nrblocks))                  # number of blocks
     
     # check that header is 14 bytes
     assert len(data) == 14
@@ -53,7 +72,6 @@ def send_file_to_p2000c(p):
             'ACK' if res[1] == 0x06 else 'NAC',
         ))
     
-    # Close the port
     ser.close()
 
 def convert_to_8_3_filename(path):

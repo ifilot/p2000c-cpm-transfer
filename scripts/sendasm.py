@@ -3,7 +3,7 @@ import time
 
 ser = serial.Serial('COM13', 9600)
 
-with open('../src/transfer/transfer.asm') as f:
+with open('../src/transfer.asm') as f:
     for line in f:
         line = line.rstrip('\n') + '\r\n'  # force CP/M-style line endings
         ser.write(line.encode('ascii'))
