@@ -11,49 +11,47 @@ START:
     MVI B,11
     LXI H,FILENAME
     CALL READSERIAL
+    CALL PRINTFILENAME
+    CALL NEWLINE
 
 ; READ NUMBER OF BLOCKS OVER SERIAL
     MVI B,2
     LXI H,NRBLOCKS
     CALL READSERIAL
+    CALL LOADNRBLOCKS
+    CALL PRINTBLOCKS
+    CALL NEWLINE
 
-; PRINT FILENAME
-    MVI B,11
-    LXI H,FILENAME
-NEXTCHAR:
-    PUSH B
-    PUSH H
-    MOV E,M
-    MVI C,2
-    CALL 5
-    POP H
-    INX H
-    POP B
-    DCR B
-    JNZ NEXTCHAR
+; OPEN FILE ON DISK
+    CALL OPENFILE
+    CALL SETBUFFER
 
-; PRINT NUMBER OF BLOCKS
-    LXI H, NRBLOCKS
-    MOV E, M       ; Load low byte into E
-    INX H          ; Increment HL to point to next byte
-    MOV D, M       ; Load high byte into D
+; READ OVER BLOCKS
+    CALL LOADNRBLOCKS
+NEXTBLOCK:
     PUSH D
-    MOV A,D
-    CALL PRINTHEX
+    CALL PRINTBLOCKS
+    CALL NEWLINE
     POP D
-    MOV A,E
-    CALL PRINTHEX
-    JMP EXIT
-
-; READ BLOCK OVER SERIAL
+    PUSH D
     MVI B,128
-    LXI H,200H
+    LXI H,BUFFER
     CALL READSERIAL
+    CALL WRITEFILE
+    MVI E, 6            ; LOAD ACKNOWLEDGE
+    MVI C, 4            ; SEND OVER SERIAL
+    CALL 5
+    POP D
+    DCX D
+    MOV A,D
+    ORA E
+    JNZ NEXTBLOCK
 
-; STORE FILE ON DISK
-    CALL STOREBLOCK
+; CLOSE FILE
+    CALL CLOSEFILE
     JMP EXIT
 
+; READ NUMBER OF BYTES SET IN B OVER SERIAL AND STORE AT HL
 READSERIAL:
     PUSH B
     PUSH H
@@ -68,60 +66,122 @@ READSERIAL:
     RET
 
 ; STORE BLOCK ON DISK
-STOREBLOCK:
+OPENFILE:
     LXI D,FCB
-    MVI C,13H
+    MVI C,13H           ; ERASE IF FILE EXISTS
     CALL 5
-
     LXI D,FCB
-    MVI C,16H
+    MVI C,22            ; CREATE NEW FILE
     CALL 5
-
-    LXI D,200H
-    MVI C,1AH
-    CALL 5
-
-    LXI D,FCB
-    MVI C,22H
-    CALL 5
-
-    LXI D,FCB
-    MVI C,10H
-    CALL 5
-
     RET
 
+; SET THE DMA BUFFER
+SETBUFFER:
+    LXI D,BUFFER
+    MVI C,26            ; SET DMA
+    CALL 5
+    RET
+
+; WRITE SEQUENTIALLY TO FILE
+WRITEFILE:
+    LXI D,FCB
+    MVI C,21            ; WRITE BLOCK TO FILE
+    CALL 5
+    CPI 0FFH
+    JZ WRITEERR
+    RET
+
+; CLOSE THE FILE
+CLOSEFILE:
+    LXI D,FCB
+    MVI C,16            ; CLOSE FILE
+    CALL 5
+    RET
+
+; PRINT FILENAME
+PRINTFILENAME:
+    MVI B,11
+    LXI H,FILENAME
+NEXTCHAR:
+    PUSH B
+    PUSH H
+    MOV E,M
+    MVI C,2
+    CALL 5
+    POP H
+    INX H
+    POP B
+    DCR B
+    JNZ NEXTCHAR
+    RET
+
+; PRINT NUMBER OF BLOCKS
+PRINTBLOCKS:
+    PUSH D
+    MOV A,D
+    CALL PRINTHEX
+    POP D
+    MOV A,E
+    CALL PRINTHEX
+    RET
+
+; LOAD NUMBER OF BLOCKS IN DE
+LOADNRBLOCKS:
+    LXI H, NRBLOCKS
+    MOV E, M
+    INX H
+    MOV D, M
+    RET
+
+; WRITE ERROR
+WRITEERR:
+    POP D               ; CLEAN STACK
+    MVI E,'E'
+    MVI C,3
+    CALL 5
+    JMP EXIT
+
 ;
-; print accumulator to the screen
-; garbles: a,c,e
+; PRINT ACCUMULATOR TO THE SCREEN
+; GARBLES: A, C, E
 ;
-printhex:
-    push psw            ; save original value
-    ani 0F0h            ; mask lower byte
-    rrc                 ; rotate right 4 times
-    rrc
-    rrc
-    rrc
-    call printnibble    ; print nibble
-    pop psw             ; retrieve original value
-    ani 0Fh             ; mask upper byte
-    call printnibble    ; print nibble
-    ret
+PRINTHEX:
+    PUSH PSW            ; SAVE ORIGINAL VALUE
+    ANI 0F0H            ; MASK LOWER BYTE
+    RRC                 ; ROTATE RIGHT 4 TIMES
+    RRC
+    RRC
+    RRC
+    CALL PRINTNIBBLE    ; PRINT NIBBLE
+    POP PSW             ; RETRIEVE ORIGINAL VALUE
+    ANI 0FH             ; MASK UPPER BYTE
+    CALL PRINTNIBBLE    ; PRINT NIBBLE
+    RET
 
-printnibble:
-    cpi 0Ah             ; is smaller than A?
-    jc isdigit          ; if so, print digit
-    adi 37h             ; else add 37h to get 'A' and higher
-    jmp printchar       ; then print digit
+PRINTNIBBLE:
+    CPI 0AH             ; IS SMALLER THAN A?
+    JC ISDIGIT          ; IF SO, PRINT DIGIT
+    ADI 37H             ; ELSE ADD 37H TO GET 'A' AND HIGHER
+    JMP PRINTCHAR       ; THEN PRINT DIGIT
 
-isdigit:
-    adi 30h             ; add 30 to convert to 0-based
+ISDIGIT:
+    ADI 30H             ; ADD 30 TO CONVERT TO 0-BASED
 
-printchar:
-    mov e,a             ; put a in e
-    mvi c,2             ; set function 2
-    call 5              ; call BDOS
-    ret
+PRINTCHAR:
+    MOV E, A            ; PUT A IN E
+    MVI C, 2            ; SET FUNCTION 2
+    CALL 5              ; CALL BDOS
+    RET
+
+; PRINT NEWLINE
+NEWLINE:
+    MVI E, 0DH
+    MVI C, 2
+    CALL 5
+    MVI E, 0AH
+    MVI C, 2
+    CALL 5
+    RET
 
 EXIT:
     RET
@@ -130,7 +190,13 @@ FCB:
     DB 0
 FILENAME:
     DB 'MYFILE  BIN'
-    DS 24
+FCBEXTENT:
+    DB 0,0,0,0,0,0,0,0
+    DB 0,0,0,0,0,0,0,0
+    DB 0,0,0,0,0,0,0,0
 
 NRBLOCKS:
     DB 0,0
+
+BUFFER:
+    DS 128
