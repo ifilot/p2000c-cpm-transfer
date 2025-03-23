@@ -15,22 +15,13 @@ data = bytes([1])
 data += bytes('HEX     COM'.encode('ascii'))
 print(data)
 
+data += bytes([0xAA, 0x55])
+
 # check that preamble is 12 bytes
-assert len(data) == 12
-
-# read filename
-with open('../src/dec/dec.com', 'rb') as f:
-    filedata = bytes(f.read())
-
-# expand to 128 bytes
-filedata += bytes([0x00] * (128 - len(filedata)))
-    
-# check that block is 128 bytes
-assert len(filedata) == 128
+assert len(data) == 14
 
 # Send the data
 ser.write(data)
-ser.write(filedata)
 
 # Close the port
 ser.close()
