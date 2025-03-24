@@ -1,4 +1,12 @@
-# P2000C CP/M Transfer
+# Philips P2000C CP/M Transfer
+
+Philips P2000C CP/M Transfer is a toolset for transferring files between a
+modern computer and the Philips P2000C running CP/M 2.2. It enables seamless
+file transfer via a serial connection using a custom protocol. This repository
+includes the necessary software, setup instructions, and a Python script to
+automate transfers.
+
+![P2000C Transfer Program](img/p2000c_transfer.jpg)
 
 ## Requirements
 
@@ -100,6 +108,12 @@ transfer the program from your modern computer to the P2000C, which will
 automatically store the program on disk. Below, an example Python code is
 provided that fullfills this task. In the sample code, we are going to transfer
 the file `ZORK1.COM`.
+
+> [!IMPORTANT]
+> * You need to figure out to which (virtual) COM port your RS232 to USB adapter
+>   is connected and modify this accordingly in the script below.
+> * Do **not** change the timeout value **nor** the baud rate. It is critical
+>   for the operation.
 
 ```python
 import serial
