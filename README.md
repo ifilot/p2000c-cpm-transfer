@@ -256,3 +256,65 @@ Make sure all subbmodules are loaded
 git submodule init
 git submodule update --recursive --remote
 ```
+
+## Extracting Files from Philips P2000C Disk Images
+
+This guide explains how to extract files from Philips P2000C `.td0` disk image
+files using modern tools. These images can be converted and read with
+`cpmtools`, once the correct disk format is defined.
+
+### Tools Required
+
+- `dsktrans` – to convert `.td0` (Teledisk) files to raw `.img` format
+- `cpmtools` – to access CP/M file systems
+
+### Step-by-Step Instructions
+
+1. **Convert `.td0` to `.img` (raw image format):**
+
+    ```bash
+    dsktrans disk.td0 disk.img
+    ```
+
+2. **Create a disk definition for the P2000C in your `diskdefs` file:**
+
+    Append the following entry to your `diskdefs` file (typically located at `/etc/cpmtools/diskdefs`):
+
+    ```text
+    # P2000C P2012 disk format
+    # 5.25" disk DS/DD
+    diskdef p2000c
+      seclen 128
+      tracks 80
+      sectrk 32
+      blocksize 4096
+      maxdir 128
+      boottrk 2
+      skewtab 0 1 4 5 8 9 12 13 16 17 20 21 24 25 28 29 2 3 6 7 10 11 14 15 18 19 22 23 26 27 30 31
+      os 2.2
+    end
+    ```
+
+3. **List files on the disk:**
+
+    ```bash
+    cpmls -f p2000c disk.img
+    ```
+
+4. **Extract files from the disk:**
+
+    ```bash
+    cpmcp -f p2000c disk.img 0:MYFILE.COM .
+    ```
+
+### Notes
+
+- The `p2000c` disk format is not supported natively by `cpmtools`. Adding the
+  entry above enables support.
+- The `skewtab` is critical for correct sector ordering due to the interleaved
+  format used by the P2000C BIOS.
+- Files will extract in correct 4 KB blocks, matching CP/M allocation behavior
+  on this system.
+
+With this setup, you can browse and extract data from historic Philips P2000C
+disk images reliably.

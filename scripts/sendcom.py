@@ -4,7 +4,7 @@ import os
 import struct
 
 def main():    
-    p = os.path.join('..', 'samples', 'hex', 'hex.com')
+    p = os.path.join('..', 'programs', 'utilities', 'compare.com')
     
     send_file_to_p2000c(p)
 
