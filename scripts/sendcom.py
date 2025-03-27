@@ -4,7 +4,7 @@ import os
 import struct
 
 def main():    
-    p = os.path.join('..', 'programs', 'utilities', 'compare.com')
+    p = os.path.join('..', 'programs', 'assemblers', 'macro80', 'hello.mac')
     
     send_file_to_p2000c(p)
 

@@ -114,6 +114,7 @@ the file `ZORK1.COM`.
 >   is connected and modify this accordingly in the script below.
 > * Do **not** change the timeout value **nor** the baud rate. It is critical
 >   for the operation.
+> * Any existing file with the same name will be **overwritten**.
 
 ```python
 import serial
@@ -231,6 +232,12 @@ the program will terminate.
 > in the P2000C stalling upon execution of any of the disk commands, e.g.
 > when running `DIR`. If this happens, simply reset the machine.
 
+## Troubleshooting
+
+If for some reason the transfer does not work, the P2000C freezes or nothing
+happens, simply unplug the RS232-USB cable on the modern computer side, restart
+your P2000C and try again.
+
 ## Cross-compilation
 
 > [!NOTE]
@@ -318,3 +325,17 @@ files using modern tools. These images can be converted and read with
 
 With this setup, you can browse and extract data from historic Philips P2000C
 disk images reliably.
+
+## Archives
+
+During my search for Philips P2000C compatible files, I encountered the
+following archives. Part of the contents of these archives might overlap.
+
+* https://electrickery.nl/comp/p2000c/floppyImages/
+* https://archive.org/download/UnRenamedFiles-Various/Philips%20P2000C%20files%20%5BTD0%5D.zip
+* https://archive.org/download/UnRenamedFiles-Various/Philips%20P2000C%20files%20%5BIMD%5D.zip
+* https://archive.org/download/UnRenamedFiles-Various/Philips%20P2000C%20files%20%5BCAS%5D.zip
+* http://dunfield.classiccmp.org//img42841/d/p2000.zip
+* https://web.archive.org/web/20210610183028/https://fjkraan.home.xs4all.nl/comp/p2000c/floppyImages/ (overlaps with electrickery.nl)
+* https://retrocomputerverzamelaar.nl/wp-content/uploads/2018/02/p2000c-archive-imd.zip (overlaps with electrickery.nl)
+* https://oldcomputers-ddns.org/public/pub/rechner/philips/p2000c/images/pk2c/index.html
