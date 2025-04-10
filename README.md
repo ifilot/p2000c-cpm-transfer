@@ -3,14 +3,47 @@
 Philips P2000C CP/M Transfer is a toolset for transferring files between a
 modern computer and the Philips P2000C running CP/M 2.2. It enables seamless
 file transfer via a serial connection using a custom protocol. This repository
-includes the necessary software, setup instructions, and a Python script to
-automate transfers.
+includes the necessary software, setup instructions, a Python script to automate
+transfers and some useful programs to test on your P2000C.
 
 ![P2000C Transfer Program](img/p2000c_transfer.jpg)
 
-## Requirements
+## Table of Contents
 
-### Philips P2000C
+- [Philips P2000C CP/M Transfer](#philips-p2000c-cpm-transfer)
+  - [Procedure](#procedure)
+    - [Overview](#overview)
+    - [Requirements](#requirements)
+      - [Philips P2000C](#philips-p2000c)
+      - [Hardware](#hardware)
+    - [Serial communication settings](#serial-communication-settings)
+    - [Getting TRANSFER.COM on the P2000C](#getting-transfercom-on-the-p2000c)
+    - [Using TRANSFER.COM to copy KERMIT.COM over](#using-transfercom-to-copy-kermitcom-over)
+  - [Useful information](#useful-information)
+    - [How TRANSFER works](#how-transfer-works)
+    - [Troubleshooting](#troubleshooting)
+    - [Cross-compilation](#cross-compilation)
+    - [Extracting Files from Philips P2000C Disk Images](#extracting-files-from-philips-p2000c-disk-images)
+      - [Tools Required](#tools-required)
+      - [Step-by-Step Instructions](#step-by-step-instructions)
+    - [Archives](#archives)
+
+## Procedure
+
+### Overview
+
+Below follows the basic procedure in a nutshell.
+
+1. Send over the compile instructions (`TRANSFER.ASM`) for the `TRANSFER.COM`
+   program
+2. Assemble the `TRANSFER.COM` program.
+3. Use `TRANSFER.COM` to transfer `KERMIT.COM`, a versatile and very robust file
+   transfer program
+4. Use `KERMIT.COM` from here on to transfer any other files.
+
+### Requirements
+
+#### Philips P2000C
 
 To transfer files using the programs in this repository, you need to have
 working Philips P2000C running CP/M 2.2 with the programs
@@ -19,7 +52,7 @@ working Philips P2000C running CP/M 2.2 with the programs
 * `ASM.COM`: To compile assembly
 * `LOAD.COM`: To create a `.COM` file
 
-### Hardware
+#### Hardware
 
 For transferring files from your modern computer to the Philips P2000C, you need
 the following (see also image)
@@ -38,13 +71,13 @@ I have been using the Waveshare RS232/485/TTL to USB adapter with great success
 (also in other projects), but admittedly, this option is on the more expensive
 side and (significantly) cheapter alternatives exist.
 
-## Serial communication settings
+### Serial communication settings
 
 Unless otherwise specified, we assume throughout that the serial communication
 proceeds using 9600 BAUD, one start bit, one stop bit and no parity
 checking.
 
-## Initial installation
+### Getting TRANSFER.COM on the P2000C
 
 To use the `transfer` program on your Philips P2000C, we need to execute
 the following steps
@@ -99,15 +132,14 @@ typing
 TRANSFER
 ```
 
-## Using TRANSFER
+### Using TRANSFER.COM to copy KERMIT.COM over
 
 Assuming you have connected a RS232 to USB cable from your Philips P2000C to
 your modern computer, you need to start the transfer program by running
 `TRANSFER`. The Philips P2000C is put into a wait state. At this point, you can
-transfer the program from your modern computer to the P2000C, which will
-automatically store the program on disk. Below, an example Python code is
-provided that fullfills this task. In the sample code, we are going to transfer
-the file `ZORK1.COM`.
+transfer the `KERMIT.COM` from your modern computer to the P2000C, which will
+automatically store the program on disk. Below, a Python code is
+provided that fullfills this task.
 
 > [!IMPORTANT]
 > * You need to figure out to which (virtual) COM port your RS232 to USB adapter
@@ -123,7 +155,7 @@ import os
 import struct
 
 def main():    
-    p = os.path.join('..', 'programs', 'games', 'zork', 'ZORK1.COM')
+    p = os.path.join('..', 'programs', 'utilities', 'KERMIT.COM')
     
     send_file_to_p2000c(p)
 
@@ -214,7 +246,11 @@ if __name__ == '__main__':
     main()
 ```
 
-## How TRANSFER works
+###
+
+## Useful information
+
+### How TRANSFER works
 
 The TRANSFER program works by first waiting for a start byte `0x01`. If such
 a start byte is received, the program continues, else it terminates. Upon
@@ -232,13 +268,13 @@ the program will terminate.
 > in the P2000C stalling upon execution of any of the disk commands, e.g.
 > when running `DIR`. If this happens, simply reset the machine.
 
-## Troubleshooting
+### Troubleshooting
 
 If for some reason the transfer does not work, the P2000C freezes or nothing
 happens, simply unplug the RS232-USB cable on the modern computer side, restart
 your P2000C and try again.
 
-## Cross-compilation
+### Cross-compilation
 
 > [!NOTE]
 > If you are mainly interested in using the transfer program rather than
@@ -264,7 +300,7 @@ git submodule init
 git submodule update --recursive --remote
 ```
 
-## Extracting Files from Philips P2000C Disk Images
+### Extracting Files from Philips P2000C Disk Images
 
 This guide explains how to extract files from Philips P2000C `.td0` disk image
 files using modern tools. These images can be converted and read with
@@ -314,7 +350,7 @@ files using modern tools. These images can be converted and read with
     cpmcp -f p2000c disk.img 0:MYFILE.COM .
     ```
 
-### Notes
+#### Notes
 
 - The `p2000c` disk format is not supported natively by `cpmtools`. Adding the
   entry above enables support.
@@ -326,7 +362,7 @@ files using modern tools. These images can be converted and read with
 With this setup, you can browse and extract data from historic Philips P2000C
 disk images reliably.
 
-## Archives
+### Archives
 
 During my search for Philips P2000C compatible files, I encountered the
 following archives. Part of the contents of these archives might overlap.
